@@ -14,6 +14,7 @@ const menuItemSchema = new mongoose.Schema(
     tags: [{ type: String, enum: TAGS }],
     available: { type: Boolean, default: true },
     image: { type: String, default: '' },
+    description: { type: String, default: '' },
     orderCount: { type: Number, default: 0 },
   },
   { timestamps: true }
