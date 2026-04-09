@@ -66,7 +66,7 @@ async function createOrderFromBody({ items, customer, paymentMethod, userId, io 
       phone: normalizePhone(customer.phone),
       email: customer.email || '',
     },
-    paymentMethod: paymentMethod === 'Razorpay' ? 'Razorpay' : 'COD',
+    paymentMethod: paymentMethod || 'Razorpay',
   });
 
   await upsertCustomer({
@@ -89,16 +89,14 @@ async function createOrderFromBody({ items, customer, paymentMethod, userId, io 
     });
   }
 
-  // Confirmation message for all orders (COD or verified Razorpay)
-  if (paymentMethod === 'COD' || paymentMethod === 'Razorpay') {
-    let targetPhone = customer.phone;
-    if (userId) {
-      const user = await User.findById(userId);
-      if (user && user.phone) targetPhone = user.phone;
-    }
-    if (targetPhone) {
-      sendPaymentSuccessMessage(targetPhone, customer.name, order.orderNo, order._id, order.trackingToken);
-    }
+  // Confirmation message for all orders (verified Razorpay)
+  let targetPhone = customer.phone;
+  if (userId) {
+    const user = await User.findById(userId);
+    if (user && user.phone) targetPhone = user.phone;
+  }
+  if (targetPhone) {
+    sendPaymentSuccessMessage(targetPhone, customer.name, order.orderNo, order._id, order.trackingToken);
   }
 
   io?.emit('orders:update', { type: 'created', orderId: order._id });
@@ -115,7 +113,7 @@ router.post('/', authUser, requireUser, async (req, res) => {
         shopClosed: true,
       });
     }
-    const { items, customer, paymentMethod = 'COD' } = req.body;
+    const { items, customer, paymentMethod = 'Razorpay' } = req.body;
     if (!items?.length || !customer?.name || !customer?.phone) {
       return res.status(400).json({ error: 'Items and customer name/phone required' });
     }
