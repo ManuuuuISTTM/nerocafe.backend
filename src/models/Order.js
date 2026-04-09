@@ -30,6 +30,7 @@ const orderSchema = new mongoose.Schema(
     // Payment tracking: status and metadata (razorpay ids, refunds, etc.)
     paymentStatus: { type: String, enum: ['Pending', 'Completed', 'Failed', 'Refunded'], default: 'Pending' },
     paymentMeta: { type: mongoose.Schema.Types.Mixed, default: {} },
+    isOutOfRange: { type: Boolean, default: false },
     cancelledAt: { type: Date, default: null },
     cancellationReason: { type: String, default: '' },
   },
