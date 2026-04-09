@@ -18,6 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** Netlify + local Vite; set CLIENT_ORIGIN on the server for production. */
 const corsOrigins = [
   process.env.CLIENT_ORIGIN,
+  'https://nerocafes.netlify.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ].filter(Boolean);
