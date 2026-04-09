@@ -89,8 +89,8 @@ async function createOrderFromBody({ items, customer, paymentMethod, userId, io 
     });
   }
 
-  // Confirmation message for COD orders
-  if (paymentMethod === 'COD') {
+  // Confirmation message for all orders (COD or verified Razorpay)
+  if (paymentMethod === 'COD' || paymentMethod === 'Razorpay') {
     let targetPhone = customer.phone;
     if (userId) {
       const user = await User.findById(userId);
