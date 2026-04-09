@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const TAGS = ['New', 'Featured', 'Combo', 'Trending'];
+const TAGS = ['New', 'Featured', 'Combo', 'Trending', 'Ultimate Combo'];
 
 const menuItemSchema = new mongoose.Schema(
   {
@@ -9,7 +9,7 @@ const menuItemSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['Burgers', 'Sandwiches', 'Maggi', 'Fries', 'Drinks', 'Pizza', 'Combos'],
+      enum: ['Burgers', 'Sandwiches', 'Maggi', 'Fries', 'Drinks', 'Pizza', 'Combos', 'Add-ons'],
     },
     tags: [{ type: String, enum: TAGS }],
     available: { type: Boolean, default: true },
