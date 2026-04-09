@@ -33,7 +33,7 @@ async function upsertCustomer({ name, phone, email, userId }) {
   });
 }
 
-async function createOrderFromBody({ items, customer, paymentMethod, userId, io }) {
+async function createOrderFromBody({ items, customer, paymentMethod, isOutOfRange, userId, io }) {
   let total = 0;
   const lineItems = [];
   for (const line of items) {
@@ -67,6 +67,7 @@ async function createOrderFromBody({ items, customer, paymentMethod, userId, io 
       email: customer.email || '',
     },
     paymentMethod: paymentMethod || 'Razorpay',
+    isOutOfRange: !!isOutOfRange,
   });
 
   await upsertCustomer({
@@ -113,7 +114,7 @@ router.post('/', authUser, requireUser, async (req, res) => {
         shopClosed: true,
       });
     }
-    const { items, customer, paymentMethod = 'Razorpay' } = req.body;
+    const { items, customer, paymentMethod = 'Razorpay', isOutOfRange = false } = req.body;
     if (!items?.length || !customer?.name || !customer?.phone) {
       return res.status(400).json({ error: 'Items and customer name/phone required' });
     }
@@ -127,6 +128,7 @@ router.post('/', authUser, requireUser, async (req, res) => {
       items,
       customer,
       paymentMethod,
+      isOutOfRange,
       userId: req.user?._id,
       io,
     });
