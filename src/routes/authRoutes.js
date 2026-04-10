@@ -57,7 +57,7 @@ router.post('/google', async (req, res) => {
     }
     const ticket = await googleClient.verifyIdToken({
       idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: process.env.GOOGLE_CLIENT_ID?.trim(),
     });
     const payload = ticket.getPayload();
     const email = payload?.email?.toLowerCase().trim();
@@ -75,7 +75,9 @@ router.post('/google', async (req, res) => {
     const token = signUserToken(user);
     res.json({ user: user.toJSON(), token });
   } catch (e) {
-    res.status(401).json({ error: 'Google sign-in failed' });
+    console.error('[Auth] Google verify error:', e);
+    const errorMessage = e.message || 'Verification failed';
+    res.status(401).json({ error: `Google sign-in failed: ${errorMessage}` });
   }
 });
 
