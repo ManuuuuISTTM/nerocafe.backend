@@ -17,6 +17,7 @@ import { sendInvoiceEmail } from '../utils/emailPlaceholder.js';
 import { createOrderFromBody } from '../utils/orderHelpers.js';
 import { User } from '../models/User.js';
 import { normalizePhone } from '../utils/phone.js';
+import { sendUserPushNotification } from '../utils/pushNotifications.js';
 
 const router = Router();
 
@@ -400,6 +401,13 @@ router.post('/orders', authAdmin, async (req, res) => {
         trackingToken: trackingToken, // Include token so customer can track
       });
 
+      // Send Push Notification
+      sendUserPushNotification(existingUser._id, 'Order Placed!', {
+        body: `Your order #${order.orderNo} has been placed successfully for ₹${order.totalPrice}.`,
+        data: { url: `/track/${order._id}` },
+        tag: `order-${order._id}`,
+      }).catch(e => console.error('[Push] Manual order create notify error:', e.message));
+
       // Send WhatsApp notification to customer about their order
       try {
         const trackLink = `${process.env.CLIENT_URL || 'https://nerocafe.com'}/track/${order._id}`;
@@ -553,6 +561,29 @@ router.patch('/orders/:id/status', authAdmin, async (req, res) => {
     io?.to(`order:${oid}`).emit('order:status', { orderId: oid, status: order.status });
     io?.emit('orders:update', { type: 'status', orderId: oid });
 
+    // Send Push Notification if user is linked
+    if (order.userId) {
+      let pushTitle = 'Order Update';
+      let pushBody = `Your order #${order.orderNo} is now ${status}.`;
+      
+      if (status === 'Preparing') {
+        pushTitle = '🔥 Preparing Your Order';
+        pushBody = `Hang tight! We've started preparing your order #${order.orderNo}.`;
+      } else if (status === 'Ready') {
+        pushTitle = '☕ Order Ready!';
+        pushBody = `Your order #${order.orderNo} is ready for pickup! See you soon.`;
+      } else if (status === 'Completed') {
+        pushTitle = '✨ Enjoy your meal!';
+        pushBody = `Order #${order.orderNo} has been completed. Hope you like it!`;
+      }
+
+      sendUserPushNotification(order.userId, pushTitle, {
+        body: pushBody,
+        data: { url: `/track/${order._id}` },
+        tag: `order-${order._id}`,
+      }).catch(e => console.error('[Push] Status update notify error:', e.message));
+    }
+
     res.json({ order });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -583,6 +614,16 @@ router.post('/orders/:id/cancel', authAdmin, async (req, res) => {
     const oid = order._id.toString();
     io?.to(`order:${oid}`).emit('order:status', { orderId: oid, status: 'Cancelled' });
     io?.emit('orders:update', { type: 'cancelled', orderId: order._id });
+
+    // Send Push notification for cancellation
+    if (order.userId) {
+      sendUserPushNotification(order.userId, 'Order Cancelled', {
+        body: `Your order #${order.orderNo} has been cancelled.`,
+        data: { url: `/track/${order._id}` },
+        tag: `order-${order._id}`,
+      }).catch(e => console.error('[Push] Cancel notify error:', e.message));
+    }
+
     res.json({ ok: true, order });
   } catch (e) {
     res.status(500).json({ error: e.message });
