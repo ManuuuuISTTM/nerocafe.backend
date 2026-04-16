@@ -4,6 +4,7 @@ import { authUser, requireUser } from '../middleware/authUser.js';
 import { getOrCreateShopSettings } from '../models/ShopSettings.js';
 import { createOrderFromBody } from '../utils/orderHelpers.js';
 import { normalizePhone } from '../utils/phone.js';
+import { sendUserPushNotification } from '../utils/pushNotifications.js';
 
 const router = Router();
 
@@ -50,6 +51,14 @@ router.post('/', authUser, requireUser, async (req, res) => {
     });
     
     const o = order.toObject();
+
+    // Send Push Notification
+    sendUserPushNotification(req.user._id, 'Order Placed! 🍕', {
+      body: `Your order #${order.orderNo} has been received. We'll start preparing it soon!`,
+      data: { url: `/track/${order._id}` },
+      tag: `order-${order._id}`,
+    }).catch(e => console.error('[Push] Order create notify error:', e.message));
+
     res.status(201).json({ order: o, trackingToken });
   } catch (e) {
     const msg = e.message === 'No valid items' ? e.message : e.message;
