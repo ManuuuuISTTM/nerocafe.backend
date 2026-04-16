@@ -7,6 +7,7 @@ import { User } from '../models/User.js';
 import { sendOrderConfirmationEmail } from './emailPlaceholder.js';
 import { sendPaymentSuccessMessage } from './whatsapp.js';
 import { normalizePhone } from './phone.js';
+import { sendAdminPushNotification } from './pushNotifications.js';
 
 export async function upsertCustomer({ name, phone, email, userId }) {
   const normPhone = normalizePhone(phone);
@@ -128,5 +129,13 @@ export async function createOrderFromBody({ items, customer, paymentMethod, isOu
     itemCount: lineItems.length,
     createdAt: order.createdAt,
   });
+
+  // Notify admins via push
+  sendAdminPushNotification(`New Order #${order.orderNo}`, {
+    body: `${customer.name} placed an order for ₹${total}`,
+    data: { url: '/admin/orders' },
+    tag: 'new-order',
+  }).catch(e => console.error('[Push] Admin notify error:', e.message));
+
   return { order, trackingToken };
 }
