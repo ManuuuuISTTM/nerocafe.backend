@@ -2,8 +2,15 @@ import webpush from 'web-push';
 import PushSubscription from '../models/PushSubscription.js';
 
 // Configure web-push with VAPID keys
+if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  const { publicKey, privateKey } = webpush.generateVAPIDKeys();
+  process.env.VAPID_PUBLIC_KEY = publicKey;
+  process.env.VAPID_PRIVATE_KEY = privateKey;
+  console.log('[Push] Auto-generated VAPID keys for session');
+}
+
 webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT,
+  process.env.VAPID_SUBJECT || 'mailto:admin@nerocafe.com',
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY
 );
