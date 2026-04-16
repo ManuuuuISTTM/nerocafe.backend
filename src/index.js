@@ -4,15 +4,7 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 
-// Auto-generate VAPID keys for Web Push if not provided
-import webpush from 'web-push';
-if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
-  const { publicKey, privateKey } = webpush.generateVAPIDKeys();
-  process.env.VAPID_PUBLIC_KEY = publicKey;
-  process.env.VAPID_PRIVATE_KEY = privateKey;
-  console.log('[Push] Generated VAPID keys');
-}
-
+// Security and Socket setup
 import helmet from 'helmet';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
